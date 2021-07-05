@@ -40,16 +40,16 @@ contract GardenOfInfiniteLove is IGarden {
 
     event FlowerPlanted(address flower, address pairedToken);
 
-    function plantNewSeed(address pairedToken) public { // start a fresh parent flower
+    function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
     if (msg.sender != dev3){
-            rootkit.transferFrom(msg.sender, address(this), 69e16); // it costs 0.69 ROOT to start a virus with a new variant pair
+            rootkit.transferFrom(msg.sender, address(this), 42069e14); // it costs 4.2069 ROOT to seed a new flower type
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
         plantNewFlower(pairedToken, dev6, dev9, 690, 420, 690, nonce); 
     }
 
-    function spreadTheLove() public override { // flower spawns another flower
+    function spreadTheLove() public override { // Any flower can spawn another flower for free
         address spreader = msg.sender;
         require (bloomingFlowers[spreader]);
         FlowerData memory parentFlowerData = flowers[spreader];

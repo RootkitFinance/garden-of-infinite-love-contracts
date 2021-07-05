@@ -15,7 +15,7 @@ contract Octalily is Owned, IOctalily {
     uint256 public price;
     uint256 public lastUpTime;
 
-    string public name = "Octalily"; 
+    string public name = "Octalilly"; 
     string public symbol = "ORLY";
     uint8 public decimals = 18;
 
@@ -28,6 +28,22 @@ contract Octalily is Owned, IOctalily {
     address private immutable dev9;
     address public immutable parentFlower;
     address public immutable strainParent;
+    address public owner2;
+    bool public owner2Locked;
+    address public owner3;
+    bool public owner3Locked;
+    // owner is 9th collector
+
+    function sharingIsCaring(address _owner2, address _owner3) public ownerOnly { // owner can share 2/3 of their fees, split between 2 address or given all to 1
+        if (!owner2Locked) { owner2 = _owner2; }
+        if (!owner3Locked) { owner3 = _owner3; }
+    }
+
+    function lockOwners(bool OTwo, bool OThree) public ownerOnly { // fees can be locked, make your loved ones secure
+        if (!owner2Locked) { owner2Locked = OTwo; }
+        if (!owner3Locked) { owner3Locked = OThree; }
+    }
+
 
     //flower stats
     IGarden public immutable garden;
@@ -38,11 +54,18 @@ contract Octalily is Owned, IOctalily {
     uint256 public immutable upDelay;
     uint256 public immutable nonce;
 
+    // petal connections
+    mapping (uint256 => address) public theEightPetals;
     uint8 petalCount;
+    bool public flowerBloomed;
+    bool public wavelength;
+
+
     function letTheFlowersCoverTheEarth() public override {
-        require (petalCount < 8);
+        require (!flowerBloomed);
         garden.spreadTheLove();
         petalCount++;
+        theEightPetals[petalCount] = msg.sender; // @ DEV: need to get the new flower address here
     }
 
     constructor(
@@ -65,31 +88,57 @@ contract Octalily is Owned, IOctalily {
             parentFlower = _parentFlower;
             strainParent = _strainParent;
             owner = _owner;
+            owner2 = _owner;
+            owner3 = _owner;
     }
     
     function payFees() public override {
-        uint256 feesOwing = balanceOf(feeCollection); 
+        uint256 feesOwing = balanceOf(feeCollection);
         uint256 equalShare = feesOwing / 9;
         _balanceOf[feeCollection] -= feesOwing;
-
+        if (flowerBloomed) {
+            equalShare = feesOwing / 16;
+            waveOfLove(equalShare);
+        }
+        else {
+            _balanceOf[strainParent] += equalShare;
+        }
         _balanceOf[dev3] += equalShare;
         _balanceOf[dev6] += equalShare;
         _balanceOf[dev9] += equalShare;
         _balanceOf[rootkitFeed] += equalShare;
         _balanceOf[parentFlower] += equalShare;
-        _balanceOf[strainParent] += equalShare;
-        _balanceOf[owner] += (equalShare + equalShare + equalShare);
+        _balanceOf[owner] += equalShare;
+        _balanceOf[owner2] += equalShare;
+        _balanceOf[owner3] += equalShare;
     }
 
     function upOnly() public override {
         require (block.timestamp > lastUpTime + upDelay);
         uint256 supplyBuyoutCost = totalSupply * price / 1e18; // paired token needed to buy all supply
-        supplyBuyoutCost += supplyBuyoutCost * totalFees / 10000; // with added fee
-        
+        supplyBuyoutCost += supplyBuyoutCost * upPercent / 10000; // with added fee
+
         if (pairedToken.balanceOf(address(this)) < supplyBuyoutCost) {
             price += price * upPercent / 10000; 
             lastUpTime = block.timestamp;
+
+            if (flowerBloomed){
+                uint256 wavePower = totalSupply * 69 / 100000;
+                waveOfLove(wavePower);
+                totalSupply += (wavePower * 8);
+            } 
         }
+    }
+
+    function waveOfLove(uint256 givingWithLove) internal {
+            _balanceOf[theEightPetals[1]] += givingWithLove;
+            _balanceOf[theEightPetals[4]] += givingWithLove;
+            _balanceOf[theEightPetals[7]] += givingWithLove;
+            _balanceOf[theEightPetals[2]] += givingWithLove;
+            _balanceOf[theEightPetals[5]] += givingWithLove;
+            _balanceOf[theEightPetals[8]] += givingWithLove;
+            _balanceOf[theEightPetals[3]] += givingWithLove;
+            _balanceOf[theEightPetals[6]] += givingWithLove;
     }
 
     function buy(uint256 _amount) public override {
@@ -101,10 +150,11 @@ contract Octalily is Owned, IOctalily {
 
     function _mint(address account, uint256 amount) internal virtual {
         uint256 remaining = amount - amount * totalFees / 10000;
+        uint256 unburned = amount - amount * 111 / 10000;
         _balanceOf[account] += remaining;
-        _balanceOf[feeCollection] += amount * 111 / 10000;
-        totalSupply += amount;
-        emit Transfer(address(0), account, amount);
+        _balanceOf[feeCollection] += unburned;
+        totalSupply += (remaining + unburned);
+        emit Transfer(address(0), account, remaining + unburned);
     }
 
     function sell(uint256 _amount) public override {
@@ -117,8 +167,9 @@ contract Octalily is Owned, IOctalily {
 
     function _burn(address notGunnaMakeIt, uint amount) internal virtual {
         _balanceOf[notGunnaMakeIt] -= amount;
-        _balanceOf[feeCollection] += amount * 111 / 10000;
-        totalSupply -= (amount - amount * 111 / 10000);
+        uint256 unburned = amount * 111 / 10000;
+        _balanceOf[feeCollection] += unburned;
+        totalSupply -= (amount - unburned);
         emit Transfer(notGunnaMakeIt, address(0), amount);
     }
 
@@ -127,7 +178,8 @@ contract Octalily is Owned, IOctalily {
     }
 
     function recoverTokens(IERC20 token) public {
-        require (msg.sender == dev6 && address(token) != address(this) && address(token) != address(pairedToken));
+        require (msg.sender == dev3 || msg.sender == dev6 || msg.sender == dev9);
+        require (address(token) != address(this) && address(token) != address(pairedToken));
         token.transfer(msg.sender, token.balanceOf(address(this)));
     }
 
