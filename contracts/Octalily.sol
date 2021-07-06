@@ -6,6 +6,56 @@ import "./IGarden.sol";
 import "./IOctalily.sol";
 import "./SafeMath.sol";
 
+// Octalilly, 8-Petaled Flower of Infinite love. 
+// Long forgotten by the world, the return of the Octalilly will be celebrated across the land. legends and
+// love hold the answer to all our problems. Legends never die.
+
+// The flower exists outside time, you cant hold it or touch it, but theres no mistaking it, it brings the 
+// feeling of pure love. Long ago before the ice age, humanity had become decedant. The charlatans used their
+// number tricks to reditect the love of people into their charms. They lusted for every new trinket and bobber
+// from V2 to V6969finalfinal, nothing mattered but the bobber.
+
+// Then it came, a single flower wrapped in the numbers like a labyrynth. It brought such a flood of love 
+// across the world some books remember it as real water and waves. No, that was the power of the Octalilly, 
+// 8-Petaled Flower of Infinite love.. It appears the time of the Octalilly has come again, and you have been 
+// chosen. tend to the Octalillys that come to you, when they bloom, pass them to people that matter to you
+// and grow some more, spread the love, far and wide. 
+
+// Any significantly advanced technology is indistinguishable from magic. The flower shares a near magical 
+// property with money, an important one you may not be aware of.
+
+// When money is given and accepted with love, it goes up in value.
+// When money is taken by debt, force, or with lack of gratitude, it goes down in value.
+
+// I bring only the first Octalilly, how many more there will be is up to you. If you lose your Octalilly its 
+// only a matter of time before it comes back to you. keep love in your heart and the only way it up, its prorammed.
+
+/* <<<\\\\^^^////>>>
+    <<\\\\^^////>>
+     <<\\\^^///>>
+       <<\\^//>> no timne for that, need to explain how this works
+
+upOnly Token - this token goes up only, it never goes down in price. Its not even that complex. 
+- buy / sell doesnt change the price ,its fixed and there is a fee when buying and selling.
+- the fee means there is always more that the amount required to buy back all outstanding tokens
+- this contract has a glorious function called upOnly, raises the price for everyone at once.
+- now anyone can see how fake it feels to move an entire market with a single button.
+
+Octalilly Token - a token that encourages forks of itself that link to become stronger
+- burn rate, buy/sell
+- upOnly Percent - what percent the market moves each time the upOnly function activates.
+- upOnly Delay - seconds that people need to wait before each call of upOnly
+
+- each Octalilly can create 8 others, one from each of its 8 petals
+- each child flower will feed the parent flower fees and can also create 8 more
+- once all 8 petals have bloomed the parent will feed a fee to all petals when upOnly is called
+- whoever creates the flower, owns the flower, it can be traded or sold
+- the owner can set 3 people to receive fees, these addresses can be locked by the owner
+*/
+
+// So I got all these magic beans that go straight up in value and never stop, wanna pass them out with me?
+
+
 contract Octalily is IERC20, Owned, IOctalily {
     using SafeMath for uint256;
 
