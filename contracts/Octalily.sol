@@ -44,7 +44,6 @@ contract Octalily is Owned, IOctalily {
         if (!owner3Locked) { owner3Locked = OThree; }
     }
 
-
     //flower stats
     IGarden public immutable garden;
     IERC20 public immutable pairedToken; // token needed to mint and burn
@@ -58,14 +57,12 @@ contract Octalily is Owned, IOctalily {
     mapping (uint256 => address) public theEightPetals;
     uint8 petalCount;
     bool public flowerBloomed;
-    bool public wavelength;
-
 
     function letTheFlowersCoverTheEarth() public override {
         require (!flowerBloomed);
-        garden.spreadTheLove();
+        address newPetal = garden.spreadTheLove();
         petalCount++;
-        theEightPetals[petalCount] = msg.sender; // @ DEV: need to get the new flower address here
+        theEightPetals[petalCount] = newPetal;
     }
 
     constructor(
@@ -131,14 +128,14 @@ contract Octalily is Owned, IOctalily {
     }
 
     function waveOfLove(uint256 givingWithLove) internal {
-            _balanceOf[theEightPetals[1]] += givingWithLove;
-            _balanceOf[theEightPetals[4]] += givingWithLove;
-            _balanceOf[theEightPetals[7]] += givingWithLove;
-            _balanceOf[theEightPetals[2]] += givingWithLove;
-            _balanceOf[theEightPetals[5]] += givingWithLove;
-            _balanceOf[theEightPetals[8]] += givingWithLove;
-            _balanceOf[theEightPetals[3]] += givingWithLove;
-            _balanceOf[theEightPetals[6]] += givingWithLove;
+        _balanceOf[theEightPetals[1]] += givingWithLove;
+        _balanceOf[theEightPetals[4]] += givingWithLove;
+        _balanceOf[theEightPetals[7]] += givingWithLove;
+        _balanceOf[theEightPetals[2]] += givingWithLove;
+        _balanceOf[theEightPetals[5]] += givingWithLove;
+        _balanceOf[theEightPetals[8]] += givingWithLove;
+        _balanceOf[theEightPetals[3]] += givingWithLove;
+        _balanceOf[theEightPetals[6]] += givingWithLove;
     }
 
     function buy(uint256 _amount) public override {

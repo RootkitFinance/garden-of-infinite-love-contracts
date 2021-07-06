@@ -16,6 +16,8 @@ contract GardenOfInfiniteLove is IGarden {
 
     mapping (address => FlowerData) public flowers;
     mapping (address => bool) bloomingFlowers;
+    mapping (address => address[]) public pairedFlowers;
+    mapping (address => uint256) flowersOfPair;
 
     struct FlowerData {
         address pairedAddress;
@@ -26,9 +28,6 @@ contract GardenOfInfiniteLove is IGarden {
         uint256 upDelay;
         uint256 nonce;
     }
-
-    mapping (address => uint256) flowersOfPair;
-
 
     constructor(address _dev6, address _dev9, IERC20 _rootkit ,address _rootkitFeed) {
         dev3 = msg.sender;
@@ -49,16 +48,16 @@ contract GardenOfInfiniteLove is IGarden {
         plantNewFlower(pairedToken, dev6, dev9, 690, 420, 690, nonce); 
     }
 
-    function spreadTheLove() public override { // Any flower can spawn another flower for free
+    function spreadTheLove() public override returns (address) { // Any flower can spawn another flower for free
         address spreader = msg.sender;
         require (bloomingFlowers[spreader]);
         FlowerData memory parentFlowerData = flowers[spreader];
-        randomizeFlowerStats(
+        return randomizeFlowerStats(
             parentFlowerData.pairedAddress, spreader, parentFlowerData.strainParent, 
             parentFlowerData.burnRate, parentFlowerData.upPercent, parentFlowerData.upDelay);
     }
 
-    function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal {
+    function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal returns (address) {
         uint256 nonce = ++flowersOfPair[pairedToken];
         burnRate = burnRate + random(nonce, 369) - 246;
         burnRate = burnRate < 420 ? 420 : burnRate;
@@ -67,14 +66,13 @@ contract GardenOfInfiniteLove is IGarden {
         upDelay = upDelay + random(nonce, 369) - 246;
         upDelay = upDelay < 69 ? 69 : upDelay;
 
-        plantNewFlower(pairedToken, parentToken, strainParent, burnRate, upPercent, upDelay, nonce);
+        return plantNewFlower(pairedToken, parentToken, strainParent, burnRate, upPercent, upDelay, nonce);
     }
         
-    function plantNewFlower(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal {        
+    function plantNewFlower(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal returns (address) {        
         Octalily newFlower = new Octalily(IERC20(pairedToken), burnRate, upPercent, upDelay, dev3, dev6, dev9, parentToken, strainParent, nonce, address(tx.origin), rootkitFeed);
         address flower = address(newFlower);
         flowers[flower] = FlowerData({
-
             pairedAddress: pairedToken,
             parentToken : parentToken,
             strainParent : strainParent,
@@ -84,8 +82,10 @@ contract GardenOfInfiniteLove is IGarden {
             nonce: nonce
         });
 
-        bloomingFlowers[flower];
+        bloomingFlowers[flower] = true;
+        pairedFlowers[pairedToken].push(flower);
         emit FlowerPlanted(flower, pairedToken);
+        return flower;
     }
 
     function random(uint256 nonce, uint256 max) private view returns (uint256) {
