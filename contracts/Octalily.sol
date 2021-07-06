@@ -133,6 +133,7 @@ contract Octalily is IERC20, Owned, IOctalily {
 
     function sell(uint256 _amount) public override {
         address notGunnaMakeIt = msg.sender;
+        require (balanceOf(notGunnaMakeIt) >= _amount);
         _burn(notGunnaMakeIt, _amount);
         _amount = _amount / 1e18;
         uint256 exitAmount = (_amount - _amount * totalFees / 10000) * price;
