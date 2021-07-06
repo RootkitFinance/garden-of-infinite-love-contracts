@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: U-U-U-UPPPPP!!!
 pragma solidity ^0.7.6;
 
-import "./ERC20.sol"; 
 import "./Owned.sol";
 import "./IGarden.sol";
 import "./IOctalily.sol";
+import "./SafeMath.sol";
 
-contract Octalily is ERC20, Owned, IOctalily {
+contract Octalily is IERC20, Owned, IOctalily {
     using SafeMath for uint256;
+
+    mapping (address => uint256) internal _balanceOf;
+    mapping (address => mapping (address => uint256)) public override allowance;
+
+    uint256 public override totalSupply;
+
+    string public override name = "Octalilly";
+    string public override symbol = "ORLY";
+    uint8 public override decimals = 18;
 
     uint256 public price;
     uint256 public lastUpTime;
@@ -45,7 +54,7 @@ contract Octalily is ERC20, Owned, IOctalily {
         IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, 
         uint256 _upDelay, address _dev3, address _dev6, 
         address _dev9, address _parentFlower, address _strainParent, uint256 _nonce,
-        address _owner, address _rootkitFeed) ERC20("Octalilly", "ORLY")  {
+        address _owner, address _rootkitFeed)  {
             garden = IGarden(msg.sender);
             dev3 = _dev3;
             dev6 = _dev6;
@@ -65,16 +74,38 @@ contract Octalily is ERC20, Owned, IOctalily {
             owner3 = _owner;
     }
 
-    function sharingIsCaring(address _owner2, address _owner3) public ownerOnly { // owner can share 2/3 of their fees, split between 2 address or given all to 1
-        if (!owner2Locked) { owner2 = _owner2; }
-        if (!owner3Locked) { owner3 = _owner3; }
+    function buy(uint256 _amount) public override {
+        address superSmartInvestor = msg.sender;
+        pairedToken.transferFrom(superSmartInvestor, address(this), _amount);
+        uint256 purchaseAmount = _amount * 1e18 / price;
+        _mint(superSmartInvestor, purchaseAmount);
     }
 
-    function lockOwners(bool OTwo, bool OThree) public ownerOnly { // fees can be locked, make your loved ones secure
-        if (!owner2Locked) { owner2Locked = OTwo; }
-        if (!owner3Locked) { owner3Locked = OThree; }
+    function sell(uint256 _amount) public override {
+        address notGunnaMakeIt = msg.sender;
+        _burn(notGunnaMakeIt, _amount);
+        _amount = _amount / 1e18;
+        uint256 exitAmount = (_amount - _amount * totalFees / 10000) * price;
+        pairedToken.transfer(notGunnaMakeIt, exitAmount);
     }
-    
+
+    function upOnly() public override {
+        require (block.timestamp > lastUpTime + upDelay);
+        uint256 supplyBuyoutCost = totalSupply * price / 1e18; // paired token needed to buy all supply
+        supplyBuyoutCost += (supplyBuyoutCost * upPercent / 10000); // with added fee
+
+        if (pairedToken.balanceOf(address(this)) > supplyBuyoutCost) {
+            price += price * upPercent / 10000; 
+            lastUpTime = block.timestamp;
+
+            if (flowerBloomed){
+                uint256 wavePower = totalSupply * 69 / 100000;
+                waveOfLove(wavePower);
+                totalSupply += (wavePower * 8);
+            } 
+        }
+    }
+
     function letTheFlowersCoverTheEarth() public override {
         require (!flowerBloomed, "Flower Bloomed");
         address newPetal = garden.spreadTheLove();
@@ -84,7 +115,12 @@ contract Octalily is ERC20, Owned, IOctalily {
             flowerBloomed = true;
         }
     }
-    
+
+    function sellOffspringToken (IOctalily lily) public override { // use to sell fees collected from other flowers
+        uint256 amount = lily.balanceOf(address(this));
+        lily.sell(amount);
+    }
+
     function payFees() public override {
         uint256 feesOwing = balanceOf(feeCollection);
         uint256 equalShare = feesOwing / 9;
@@ -106,23 +142,25 @@ contract Octalily is ERC20, Owned, IOctalily {
         _balanceOf[owner3] += equalShare;
     }
 
-    function upOnly() public override {
-        require (block.timestamp > lastUpTime + upDelay);
-        uint256 supplyBuyoutCost = totalSupply * price / 1e18; // paired token needed to buy all supply
-        supplyBuyoutCost += (supplyBuyoutCost * upPercent / 10000); // with added fee
-
-        if (pairedToken.balanceOf(address(this)) > supplyBuyoutCost) {
-            price += price * upPercent / 10000; 
-            lastUpTime = block.timestamp;
-
-            if (flowerBloomed){
-                uint256 wavePower = totalSupply * 69 / 100000;
-                waveOfLove(wavePower);
-                totalSupply += (wavePower * 8);
-            } 
-        }
+    // owner functions
+    function sharingIsCaring(address _owner2, address _owner3) public ownerOnly { // owner can share 2/3 of their fees, split between 2 address or given all to 1
+        if (!owner2Locked) { owner2 = _owner2; }
+        if (!owner3Locked) { owner3 = _owner3; }
     }
 
+    function lockOwners(bool OTwo, bool OThree) public ownerOnly { // fees can be locked, make your loved ones secure
+        if (!owner2Locked) { owner2Locked = OTwo; }
+        if (!owner3Locked) { owner3Locked = OThree; }
+    }
+    
+    //dev functions
+    function recoverTokens(IERC20 token) public {
+        require (msg.sender == dev3 || msg.sender == dev6 || msg.sender == dev9);
+        require (address(token) != address(this) && address(token) != address(pairedToken));
+        token.transfer(msg.sender, token.balanceOf(address(this)));
+    }
+
+    // internal functions
     function waveOfLove(uint256 givingWithLove) internal {
         _balanceOf[theEightPetals[1]] += givingWithLove;
         _balanceOf[theEightPetals[4]] += givingWithLove;
@@ -134,14 +172,8 @@ contract Octalily is ERC20, Owned, IOctalily {
         _balanceOf[theEightPetals[6]] += givingWithLove;
     }
 
-    function buy(uint256 _amount) public override {
-        address superSmartInvestor = msg.sender;
-        pairedToken.transferFrom(superSmartInvestor, address(this), _amount);
-        uint256 purchaseAmount = _amount * 1e18 / price;
-        _mint(superSmartInvestor, purchaseAmount);
-    }
-
-    function _mint(address account, uint256 amount) internal override {
+    //ERC20
+    function _mint(address account, uint256 amount) internal {
         uint256 remaining = amount - amount * totalFees / 10000;
         uint256 unburned = amount * 111 / 10000;
         _balanceOf[account] += remaining;
@@ -150,15 +182,7 @@ contract Octalily is ERC20, Owned, IOctalily {
         emit Transfer(address(0), account, remaining + unburned);
     }
 
-    function sell(uint256 _amount) public override {
-        address notGunnaMakeIt = msg.sender;
-        _burn(notGunnaMakeIt, _amount);
-        _amount = _amount / 1e18;
-        uint256 exitAmount = (_amount - _amount * totalFees / 10000) * price;
-        pairedToken.transfer(notGunnaMakeIt, exitAmount);
-    }
-
-    function _burn(address notGunnaMakeIt, uint amount) internal override {
+    function _burn(address notGunnaMakeIt, uint amount) internal {
         _balanceOf[notGunnaMakeIt] -= amount;
         uint256 unburned = amount * 111 / 10000;
         _balanceOf[feeCollection] += unburned;
@@ -166,7 +190,7 @@ contract Octalily is ERC20, Owned, IOctalily {
         emit Transfer(notGunnaMakeIt, address(0), amount);
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal override {
+    function _transfer(address sender, address recipient, uint256 amount) internal {
         uint256 remaining = amount;
         uint256 burn = amount * totalFees / 10000;
         remaining = amount.sub(burn, "Octalily: burn too much");      
@@ -179,14 +203,32 @@ contract Octalily is ERC20, Owned, IOctalily {
         emit Transfer(sender, recipient, remaining);
     }
 
-    function recoverTokens(IERC20 token) public {
-        require (msg.sender == dev3 || msg.sender == dev6 || msg.sender == dev9);
-        require (address(token) != address(this) && address(token) != address(pairedToken));
-        token.transfer(msg.sender, token.balanceOf(address(this)));
+    function balanceOf(address a) public virtual override view returns (uint256) { return _balanceOf[a]; }
+
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(msg.sender, recipient, amount);
+        return true;
+    }
+    
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        _approve(msg.sender, spender, amount);
+        return true;
     }
 
-    function sellOffspringToken (IOctalily lily) public override { 
-        uint256 amount = lily.balanceOf(address(this));
-        lily.sell(amount);
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(sender, recipient, amount);
+        uint256 oldAllowance = allowance[sender][msg.sender];
+        if (oldAllowance != uint256(-1)) {
+            _approve(sender, msg.sender, oldAllowance.sub(amount, "ERC20: transfer amount exceeds allowance"));
+        }
+        return true;
+    }
+
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
+        allowance[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
     }
 }

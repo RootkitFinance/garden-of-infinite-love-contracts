@@ -17,7 +17,7 @@ contract GardenOfInfiniteLove is IGarden {
     mapping (address => FlowerData) public flowers;
     mapping (address => bool) bloomingFlowers;
     mapping (address => address[]) public pairedFlowers;
-    mapping (address => uint256) flowersOfPair;
+    mapping (address => uint256) public flowersOfPair;
 
     struct FlowerData {
         address pairedAddress;
