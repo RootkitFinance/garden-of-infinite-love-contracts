@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: U-U-U-UPPPPP!!!
 pragma solidity ^0.7.6;
 
-interface IOctalily
+import "./IERC20.sol";
+
+interface IOctalily is IERC20
 {
     function letTheFlowersCoverTheEarth() external;
     function payFees() external;
@@ -9,5 +11,4 @@ interface IOctalily
     function buy(uint256 _amount) external;
     function sell(uint256 _amount) external;
     function sellOffspringToken (IOctalily lily) external;
-    function balanceOf(address _account) external view returns (uint256);
 }

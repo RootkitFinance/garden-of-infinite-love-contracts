@@ -5,9 +5,9 @@ pragma abicoder v2;
 import "./IERC20.sol";
 import "./IGarden.sol";
 import "./Octalily.sol";
+import "./SafeMath.sol";
 
 contract GardenOfInfiniteLove is IGarden {
-
     IERC20 public immutable rootkit;
     address private immutable dev3;
     address private immutable dev6;
@@ -59,7 +59,7 @@ contract GardenOfInfiniteLove is IGarden {
 
     function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal returns (address) {
         uint256 nonce = ++flowersOfPair[pairedToken];
-        burnRate = burnRate + random(nonce, 369) - 246;
+        burnRate = burnRate + random(nonce, 369) - 123;
         burnRate = burnRate < 420 ? 420 : burnRate;
         upPercent = upPercent + random(nonce, 6) * 100 - 400;
         upPercent = upPercent > burnRate + 111 ? burnRate - 111 : upPercent;
