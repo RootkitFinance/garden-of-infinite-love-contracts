@@ -50,7 +50,9 @@ Octalilly Token - a token that encourages forks of itself that link to become st
 - each child flower will feed the parent flower fees and can also create 8 more
 - once all 8 petals have bloomed the parent will feed a fee to all petals when upOnly is called
 - whoever creates the flower, owns the flower, it can be traded or sold
-- the owner can set 3 people to receive fees, these addresses can be locked by the owner
+- the owner can set 2 other people to receive fees, these addresses can be locked by the owner
+- address locked into owner2 and owner3 can never change and will receive fees forever
+- the current owner always receives a portion of fees
 */
 
 // So I got all these magic beans that go straight up in value and never stop, wanna pass them out with me?
@@ -84,7 +86,7 @@ contract Octalily is IERC20, Owned, IOctalily {
     bool public owner2Locked;
     address public owner3;
     bool public owner3Locked;
-    // owner is 9th collector   
+    // owner is 9th collector
 
     //flower stats
     IGarden public immutable garden;
@@ -98,7 +100,9 @@ contract Octalily is IERC20, Owned, IOctalily {
     // petal connections
     mapping (uint256 => address) public theEightPetals;
     uint8 public petalCount;
-    bool public flowerBloomed;   
+    bool public flowerBloomed;
+    event WaveOfLove();
+    event AnotherOctalilyBeginsToGrow(address Octalily);
 
     constructor(
         IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, 
@@ -151,7 +155,7 @@ contract Octalily is IERC20, Owned, IOctalily {
             lastUpTime = block.timestamp;
 
             if (flowerBloomed){
-                uint256 wavePower = totalSupply * 69 / 100000;
+                uint256 wavePower = totalSupply * 69 / 420000;
                 waveOfLove(wavePower);
                 totalSupply += (wavePower * 8);
             } 
@@ -163,6 +167,7 @@ contract Octalily is IERC20, Owned, IOctalily {
         address newPetal = garden.spreadTheLove();
         petalCount++;
         theEightPetals[petalCount] = newPetal;
+        emit AnotherOctalilyBeginsToGrow(newPetal);
         if (petalCount == 8) {
             flowerBloomed = true;
         }
@@ -222,6 +227,7 @@ contract Octalily is IERC20, Owned, IOctalily {
         _balanceOf[theEightPetals[8]] += givingWithLove;
         _balanceOf[theEightPetals[3]] += givingWithLove;
         _balanceOf[theEightPetals[6]] += givingWithLove;
+        emit WaveOfLove();
     }
 
     //ERC20

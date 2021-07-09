@@ -41,7 +41,7 @@ contract GardenOfInfiniteLove is IGarden {
 
     function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
         if (msg.sender != dev3){
-            rootkit.transferFrom(msg.sender, address(this), 696969e12); // it costs 0.69 ROOT to seed a new flower type
+            rootkit.transferFrom(msg.sender, address(this), 696969e12); // it costs 6969 upBNB to seed a new flower type
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
