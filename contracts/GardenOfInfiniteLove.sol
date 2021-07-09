@@ -40,12 +40,12 @@ contract GardenOfInfiniteLove is IGarden {
     event FlowerPlanted(address flower, address pairedToken);
 
     function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
-    if (msg.sender != dev3){
+        if (msg.sender != dev3){
             rootkit.transferFrom(msg.sender, address(this), 42069e14); // it costs 4.2069 ROOT to seed a new flower type
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
-        plantNewFlower(pairedToken, dev6, dev9, 690, 420, 690, nonce); 
+        plantNewFlower(pairedToken, dev3, address(0), 690, 420, 690, nonce); 
     }
 
     function spreadTheLove() public override returns (address) { // Any flower can spawn another flower for free
@@ -60,11 +60,20 @@ contract GardenOfInfiniteLove is IGarden {
     function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal returns (address) {
         uint256 nonce = ++flowersOfPair[pairedToken];
         burnRate = burnRate + random(nonce, 369) - 123;
-        burnRate = burnRate < 420 ? 420 : burnRate;
-        upPercent = upPercent + random(nonce, 6) * 100 - 400;
-        upPercent = upPercent > burnRate + 111 ? burnRate - 111 : upPercent;
+        if (burnRate < 420) {
+            burnRate = 420;
+        }
+        upPercent = upPercent + random(nonce, 7) * 100 - 400;
+        if (upPercent < 300) {
+            upPercent = 300;
+        }
+        if (upPercent > burnRate + 111) {
+            upPercent = burnRate - 111;
+        }
         upDelay = upDelay + random(nonce, 369) - 246;
-        upDelay = upDelay < 69 ? 69 : upDelay;
+        if (upDelay < 246) {
+            upDelay = 246;
+        }
 
         return plantNewFlower(pairedToken, parentToken, strainParent, burnRate, upPercent, upDelay, nonce);
     }

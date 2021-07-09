@@ -97,7 +97,7 @@ contract Octalily is IERC20, Owned, IOctalily {
 
     // petal connections
     mapping (uint256 => address) public theEightPetals;
-    uint8 petalCount;
+    uint8 public petalCount;
     bool public flowerBloomed;   
 
     constructor(
@@ -118,10 +118,11 @@ contract Octalily is IERC20, Owned, IOctalily {
             nonce = _nonce;
             price = 696969696969;
             parentFlower = _parentFlower;
-            strainParent = _strainParent;
+            strainParent = _strainParent == address(0) ? address(this) : _strainParent;
             owner = _owner;
             owner2 = _owner;
             owner3 = _owner;
+            lastUpTime = block.timestamp;
     }
 
     function buy(uint256 _amount) public override {

@@ -13,7 +13,7 @@ import "./IOwned.sol";
 abstract contract Owned is IOwned
 {
     address public override owner = msg.sender;
-    address internal pendingOwner;
+    address public pendingOwner;
 
     modifier ownerOnly()
     {
