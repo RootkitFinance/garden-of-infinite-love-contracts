@@ -84,7 +84,7 @@ contract GardenOfInfiniteLove is IGarden {
         flowers[flower] = FlowerData({
             pairedAddress: pairedToken,
             parentToken : parentToken,
-            strainParent : strainParent,
+            strainParent : newFlower.strainParent,
             burnRate: burnRate,
             upPercent: upPercent,
             upDelay: upDelay,
