@@ -13,6 +13,10 @@ contract GardenOfInfiniteLove is IGarden {
     address private immutable dev6;
     address private immutable dev9;
     address private immutable rootkitFeed;
+    uint256 public costToPlantNewSeed; 
+    // 6969e18 - 6969 upBNB 
+    // 696969e12 - 0.69 ROOT
+    // 696969e15 -  696 upTether
 
     mapping (address => FlowerData) public flowers;
     mapping (address => bool) bloomingFlowers;
@@ -29,19 +33,20 @@ contract GardenOfInfiniteLove is IGarden {
         uint256 nonce;
     }
 
-    constructor(address _dev6, address _dev9, IERC20 _rootkit ,address _rootkitFeed) {
+    constructor(address _dev6, address _dev9, IERC20 _rootkit, address _rootkitFeed, uint256 _costToPlantNewSeed) {
         dev3 = msg.sender;
         dev6 = _dev6;
         dev9 = _dev9;
         rootkit = _rootkit;
         rootkitFeed = _rootkitFeed;
+        costToPlantNewSeed = _costToPlantNewSeed;
     }
 
     event FlowerPlanted(address flower, address pairedToken);
 
     function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
         if (msg.sender != dev3){
-            rootkit.transferFrom(msg.sender, address(this), 696969e12); // it costs 0.69 ROOT to seed a new flower type
+            rootkit.transferFrom(msg.sender, address(this), costToPlantNewSeed); // it costs 0.69 ROOT to seed a new flower type
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];

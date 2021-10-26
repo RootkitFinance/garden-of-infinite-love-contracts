@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: U-U-U-UPPPPP!!!
 pragma solidity ^0.7.6;
 
-import "./Owned.sol";
 import "./IGarden.sol";
 import "./IOctalily.sol";
 import "./SafeMath.sol";
+import "./MultiOwned.sol";
 
 // Octalilly, 8-Petaled Flower of Infinite love. 
 // Long forgotten by the world, the return of the Octalilly will be celebrated across the land. legends and
@@ -58,7 +58,7 @@ Octalilly Token - a token that encourages forks of itself that link to become st
 // So I got all these magic beans that go straight up in value and never stop, wanna pass them out with me?
 
 
-contract Octalily is IERC20, Owned, IOctalily {
+contract Octalily is IERC20, MultiOwned, IOctalily {
     using SafeMath for uint256;
 
     mapping (address => uint256) internal _balanceOf;
@@ -82,11 +82,6 @@ contract Octalily is IERC20, Owned, IOctalily {
     address private immutable dev9;
     address public immutable parentFlower;
     address public immutable strainParent;
-    address public owner2;
-    bool public owner2Locked;
-    address public owner3;
-    bool public owner3Locked;
-    // owner is 9th collector
 
     //flower stats
     IGarden public immutable garden;
@@ -102,14 +97,19 @@ contract Octalily is IERC20, Owned, IOctalily {
     uint8 public petalCount;
     bool public flowerBloomed;
     event WaveOfLove();
+    event PriceChanged(uint256 newPrice, uint256 newTotalSupply);
     event AnotherOctalilyBeginsToGrow(address Octalily);
 
-    constructor(
+    constructor() {
+        garden = IGarden(msg.sender);
+    }
+
+    function init(
         IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, 
         uint256 _upDelay, address _dev3, address _dev6, 
         address _dev9, address _parentFlower, address _strainParent, uint256 _nonce,
-        address _owner, address _rootkitFeed)  {
-            garden = IGarden(msg.sender);
+        address _owner, address _rootkitFeed) {       
+            require(msg.sender == address(garden)); 
             dev3 = _dev3;
             dev6 = _dev6;
             dev9 = _dev9;
@@ -122,10 +122,7 @@ contract Octalily is IERC20, Owned, IOctalily {
             nonce = _nonce;
             price = 696969696969;
             parentFlower = _parentFlower;
-            strainParent = _strainParent == address(0) ? address(this) : _strainParent;
-            owner = _owner;
-            owner2 = _owner;
-            owner3 = _owner;
+            strainParent = _strainParent == address(0) ? address(this) : _strainParent;           
             lastUpTime = block.timestamp;
     }
 
@@ -154,11 +151,13 @@ contract Octalily is IERC20, Owned, IOctalily {
             price += price * upPercent / 10000; 
             lastUpTime = block.timestamp;
 
-            if (flowerBloomed){
+            if (flowerBloomed) {
                 uint256 wavePower = totalSupply * 69 / 420000;
                 waveOfLove(wavePower);
                 totalSupply += (wavePower * 8);
-            } 
+            }
+
+            emit PriceChanged(price, totalSupply);
         }
     }
 
@@ -194,20 +193,11 @@ contract Octalily is IERC20, Owned, IOctalily {
         _balanceOf[dev9] += equalShare;
         _balanceOf[rootkitFeed] += equalShare;
         _balanceOf[parentFlower] += equalShare;
+
+        
         _balanceOf[owner] += equalShare;
         _balanceOf[owner2] += equalShare;
         _balanceOf[owner3] += equalShare;
-    }
-
-    // owner functions
-    function sharingIsCaring(address _owner2, address _owner3) public ownerOnly { // owner can share 2/3 of their fees, split between 2 address or given all to 1
-        if (!owner2Locked) { owner2 = _owner2; }
-        if (!owner3Locked) { owner3 = _owner3; }
-    }
-
-    function lockOwners(bool OTwo, bool OThree) public ownerOnly { // fees can be locked, make your loved ones secure
-        if (!owner2Locked) { owner2Locked = OTwo; }
-        if (!owner3Locked) { owner3Locked = OThree; }
     }
     
     //dev functions
