@@ -21,7 +21,6 @@ contract OctalilyNameDescriptionRegistry {
     function setDescription(address octalilyAddress, bytes32 description) public {
         Octalily octalily = Octalily(octalilyAddress);
         require(msg.sender == octalily.owner(), "Owner only");
-        require(descriptions[octalilyAddress] == 0, "Already set");
         descriptions[octalilyAddress] = description;
         emit DescriptionSet(octalilyAddress, description);
     }
