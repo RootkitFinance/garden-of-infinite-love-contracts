@@ -5,18 +5,24 @@ import "./Octalily.sol";
 
 contract OctalilyNameDescriptionRegistry {
 
-    struct OctalilyNameDescription{
-      bytes32 name;
-      bytes32 description;
-    }
+    mapping (address => bytes32) public names;
+    mapping (address => bytes32) public descriptions;
+    event NameSet(address indexed octalilyAddress, bytes32 name);
+    event DescriptionSet(address indexed octalilyAddress, bytes32 description);
 
-    mapping (address => OctalilyNameDescription[]) public nameDescriptions;    
-    event NameDescriptionSet(address indexed octalilyAddress, bytes32 name, bytes32 description);
-
-    function setNameDescription(address octalilyAddress, bytes32 name, bytes32 description) public {
+    function setName(address octalilyAddress, bytes32 name) public {
         Octalily octalily = Octalily(octalilyAddress);
         require(msg.sender == octalily.owner(), "Owner only");
-        nameDescriptions[octalilyAddress].push(OctalilyNameDescription(name,description));
-        emit NameDescriptionSet(octalilyAddress, name, description);
+        require(names[octalilyAddress] == 0, "Already set");
+        names[octalilyAddress] = name;
+        emit NameSet(octalilyAddress, name);
+    }
+    
+    function setDescription(address octalilyAddress, bytes32 description) public {
+        Octalily octalily = Octalily(octalilyAddress);
+        require(msg.sender == octalily.owner(), "Owner only");
+        require(descriptions[octalilyAddress] == 0, "Already set");
+        descriptions[octalilyAddress] = description;
+        emit DescriptionSet(octalilyAddress, description);
     }
 }
