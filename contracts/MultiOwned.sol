@@ -47,9 +47,9 @@ abstract contract MultiOwned is IMultiOwned {
         address oldOwner =  owners[1];
         ownerIndex[oldOwner] = 0;
         ownerIndex[msg.sender] = 1;
-        pendingOwner = address(0);
-        emit OwnershipTransferred(oldOwner, msg.sender);
+        pendingOwner = address(0);       
         owners[1] = msg.sender;
+        emit OwnershipTransferred(oldOwner, msg.sender);
     }
 
     function setInitialOwners(address owner1, address owner2, address owner3) public virtual override {
@@ -64,7 +64,7 @@ abstract contract MultiOwned is IMultiOwned {
     }
 
     function addExtraOwners(uint256 indexSpot, address newOwner) public virtual override ownerOnly(){
-        if (dictator == false) {
+        if (!dictator) {
             require (owners[indexSpot] == address(0));
             ownerCount++;
             require (ownerCount < 42);

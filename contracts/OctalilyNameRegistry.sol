@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: U-U-U-UPPPPP!!!
 pragma solidity ^0.7.6;
 
-import "./Octalily.sol";
+import "./IMultiOwned.sol";
 
 contract OctalilyNameRegistry {
 
@@ -9,8 +9,8 @@ contract OctalilyNameRegistry {
     event NameSet(address indexed octalilyAddress, bytes32 name);
 
     function setName(address octalilyAddress, bytes32 name) public {
-        Octalily octalily = Octalily(octalilyAddress);
-        require(msg.sender == octalily.owner(), "Owner only");
+        IMultiOwned octalily = IMultiOwned(octalilyAddress);
+        require(msg.sender == octalily.owners(1), "Owner only");
         require(names[octalilyAddress] == 0, "Already set");
         names[octalilyAddress] = name;
         emit NameSet(octalilyAddress, name);

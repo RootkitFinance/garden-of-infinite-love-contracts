@@ -76,21 +76,18 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     address constant feeCollection = 0x6969696969696969696969696969696969696969;
 
     //fee collectors
-    address public immutable rootkitFeed;
-    address private immutable dev3;
-    address private immutable dev6;
-    address private immutable dev9;
-    address public immutable parentFlower;
-    address public immutable strainParent;
+    address public rootkitFeed;
+    address public parentFlower;
+    address public strainParent;
 
     //flower stats
-    IGarden public immutable garden;
-    IERC20 public immutable pairedToken; // token needed to mint and burn
-    uint256 public immutable burnRate;   // % of tokens burned on every tx --> 100 = 1.00 ( div 10k)
-    uint256 public immutable totalFees;
-    uint256 public immutable upPercent;
-    uint256 public immutable upDelay;
-    uint256 public immutable nonce;
+    IGarden public garden;
+    IERC20 public pairedToken; // token needed to mint and burn
+    uint256 public burnRate;   // % of tokens burned on every tx --> 100 = 1.00 ( div 10k)
+    uint256 public totalFees;
+    uint256 public upPercent;
+    uint256 public upDelay;
+    uint256 public nonce;
 
     // petal connections
     mapping (uint256 => address) public theEightPetals;
@@ -104,15 +101,11 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         garden = IGarden(msg.sender);
     }
 
-    function init(
+    function init (
         IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, 
-        uint256 _upDelay, address _dev3, address _dev6, 
-        address _dev9, address _parentFlower, address _strainParent, uint256 _nonce,
-        address _owner, address _rootkitFeed) {       
+        uint256 _upDelay, address _parentFlower, address _strainParent, 
+        uint256 _nonce, address _rootkitFeed) public {       
             require(msg.sender == address(garden)); 
-            dev3 = _dev3;
-            dev6 = _dev6;
-            dev9 = _dev9;
             rootkitFeed = _rootkitFeed;
             pairedToken = _pairedToken;
             burnRate = _burnRate;
@@ -179,30 +172,27 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
 
     function payFees() public override {
         uint256 feesOwing = balanceOf(feeCollection);
-        uint256 equalShare = feesOwing / 9;
+        uint256 equalShare = feesOwing / (ownerCount + 3); // ownerCount + strainParent + rootkitFeed + parentFlower
+
         _balanceOf[feeCollection] -= feesOwing;
         if (flowerBloomed) {
-            equalShare = feesOwing / 16;
+            equalShare = feesOwing / (ownerCount + 10); //ownerCount + 8 petals + rootkitFeed, parentFlower
             waveOfLove(equalShare);
         }
         else {
             _balanceOf[strainParent] += equalShare;
         }
-        _balanceOf[dev3] += equalShare;
-        _balanceOf[dev6] += equalShare;
-        _balanceOf[dev9] += equalShare;
         _balanceOf[rootkitFeed] += equalShare;
         _balanceOf[parentFlower] += equalShare;
 
-        
-        _balanceOf[owner] += equalShare;
-        _balanceOf[owner2] += equalShare;
-        _balanceOf[owner3] += equalShare;
+        for (uint256 i = 1; i <= ownerCount; i++) {
+             _balanceOf[owners[i]] += equalShare;
+        }
     }
     
     //dev functions
     function recoverTokens(IERC20 token) public {
-        require (msg.sender == dev3 || msg.sender == dev6 || msg.sender == dev9);
+        require (msg.sender == owners[1] || msg.sender == owners[2] || msg.sender == owners[3]);
         require (address(token) != address(this) && address(token) != address(pairedToken));
         token.transfer(msg.sender, token.balanceOf(address(this)));
     }

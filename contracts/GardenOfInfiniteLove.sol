@@ -84,7 +84,10 @@ contract GardenOfInfiniteLove is IGarden {
     }
         
     function plantNewFlower(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal returns (address) {        
-        Octalily newFlower = new Octalily(IERC20(pairedToken), burnRate, upPercent, upDelay, dev3, dev6, dev9, parentToken, strainParent, nonce, address(tx.origin), rootkitFeed);
+        Octalily newFlower = new Octalily();
+        newFlower.init(IERC20(pairedToken), burnRate, upPercent, upDelay, parentToken, strainParent, nonce, rootkitFeed);
+        newFlower.setInitialOwners(dev3, dev6, dev9);
+        newFlower.addExtraOwners(4, address(tx.origin));
         address flower = address(newFlower);
         flowers[flower] = FlowerData({
             pairedAddress: pairedToken,
