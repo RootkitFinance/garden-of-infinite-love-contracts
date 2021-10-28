@@ -5,10 +5,10 @@ import "./IMultiOwned.sol";
 
 abstract contract MultiOwned is IMultiOwned {
     
-    uint256 public override ownerCount; // 3 to start, up to 6 more, 9 in total
+    uint256 public override ownerCount;
 
     mapping (uint256 => address) public override owners;
-    mapping (address => uint256) public override ownerIndex; 
+    mapping (address => uint256) public override ownerIndex;
     address public pendingOwner;
     bool public dictator;
 
@@ -67,14 +67,14 @@ abstract contract MultiOwned is IMultiOwned {
         if (!dictator) {
             require (owners[indexSpot] == address(0));
             ownerCount++;
-            require (ownerCount < 42);
+            require (ownerCount < 23);
             owners[indexSpot] = newOwner;
             ownerIndex[newOwner] = indexSpot;
             emit OwnershipTransferred(address(0), newOwner);
         }
         else {
             address oldOwner =  owners[indexSpot];
-            ownerIndex[oldOwner] = 0;
+            ownerIndex[oldOwner] == 0 ? ownerCount++ : ownerIndex[oldOwner] = 0;
             require (ownerIndex[newOwner] == 0, "1 owner slot per address");
             owners[indexSpot] = newOwner;
             ownerIndex[newOwner] = indexSpot;
