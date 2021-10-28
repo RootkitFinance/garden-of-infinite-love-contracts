@@ -73,9 +73,15 @@ abstract contract MultiOwned is IMultiOwned {
             emit OwnershipTransferred(address(0), newOwner);
         }
         else {
-            address oldOwner =  owners[indexSpot];
-            ownerIndex[oldOwner] == 0 ? ownerCount++ : ownerIndex[oldOwner] = 0;
-            require (ownerIndex[newOwner] == 0, "1 owner slot per address");
+            address oldOwner = owners[indexSpot];
+            if (ownerIndex[oldOwner] == 0) {
+                ownerCount++;
+                require (ownerCount <= 23);
+            }
+            else {
+                ownerIndex[oldOwner] = 0;
+            }           
+           
             owners[indexSpot] = newOwner;
             ownerIndex[newOwner] = indexSpot;
             emit OwnershipTransferred(oldOwner, newOwner);

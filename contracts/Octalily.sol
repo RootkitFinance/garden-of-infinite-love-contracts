@@ -108,7 +108,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
             rootkitFeed = _rootkitFeed;
             pairedToken = _pairedToken;
             burnRate = _burnRate;
-            totalFees = _burnRate + 222;
+            totalFees = _burnRate + 123;
             upPercent = _upPercent;
             upDelay = _upDelay;
             nonce = _nonce;
@@ -147,7 +147,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     }
 
     function letTheFlowersCoverTheEarth() public override {
-        require (garden.restrictedMode() == false);
+        require (!garden.restrictedMode() || msg.sender == owners[1] || msg.sender == owners[2] || msg.sender == owners[3]);
         require (!flowerBloomed, "Flower Bloomed");
         address newPetal = garden.spreadTheLove();
         petalCount++;
@@ -159,6 +159,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     }
 
     function sellOffspringToken (IOctalily lily) public override { // use to sell fees collected from other flowers
+        require(address(lily) != address(this));
         uint256 amount = lily.balanceOf(address(this));
         lily.sell(amount);
     }
@@ -202,7 +203,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     //ERC20
     function _mint(address account, uint256 amount) internal {
         uint256 remaining = amount - amount * totalFees / 10000;
-        uint256 unburned = amount * 111 / 10000;
+        uint256 unburned = amount * 123 / 10000;
         _balanceOf[account] += remaining;
         _balanceOf[feeCollection] += unburned;
         totalSupply += (remaining + unburned);
@@ -211,7 +212,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
 
     function _burn(address notGunnaMakeIt, uint amount) internal {
         _balanceOf[notGunnaMakeIt] -= amount;
-        uint256 unburned = amount * 111 / 10000;
+        uint256 unburned = amount * 123 / 10000;
         _balanceOf[feeCollection] += unburned;
         totalSupply -= (amount - unburned);
         emit Transfer(notGunnaMakeIt, address(0), amount);

@@ -59,7 +59,7 @@ contract GardenOfInfiniteLove is IGarden {
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
-        plantNewFlower(pairedToken, dev3, address(0), 690, 420, 690, nonce); 
+        plantNewFlower(pairedToken, dev3, address(0), 1420, 420, 1690, nonce); 
     }
 
     function spreadTheLove() public override returns (address) { // Any flower can spawn another flower for free
@@ -86,7 +86,7 @@ contract GardenOfInfiniteLove is IGarden {
             burnRate = upPercent + upPercent/2;
         }
 
-        upDelay = upDelay + random(nonce, 1369) - 1180;
+        upDelay = upDelay + random(nonce, 1369) - 693;
         if (upDelay < 1690) {
             upDelay = 1690;
         }
