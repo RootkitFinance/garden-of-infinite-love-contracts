@@ -93,8 +93,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     mapping (uint256 => address) public theEightPetals;
     uint8 public petalCount;
     bool public flowerBloomed;
-    event WaveOfLove();
-    event PriceChanged(uint256 newPrice, uint256 newTotalSupply);
+    event PriceChanged(uint256 newPrice);
     event AnotherOctalilyBeginsToGrow(address Octalily);
 
     constructor() {
@@ -113,7 +112,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
             upPercent = _upPercent;
             upDelay = _upDelay;
             nonce = _nonce;
-            price = 696969696969;
+            price = 696969;
             parentFlower = _parentFlower;
             strainParent = _strainParent == address(0) ? address(this) : _strainParent;           
             lastUpTime = block.timestamp;
@@ -122,7 +121,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     function buy(uint256 _amount) public override {
         address superSmartInvestor = msg.sender;
         pairedToken.transferFrom(superSmartInvestor, address(this), _amount);
-        uint256 purchaseAmount = _amount * 1e18 / price;
+        uint256 purchaseAmount = _amount * 1e9 / price;
         _mint(superSmartInvestor, purchaseAmount);
     }
 
@@ -130,27 +129,20 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         address notGunnaMakeIt = msg.sender;
         require (balanceOf(notGunnaMakeIt) >= _amount);
         _burn(notGunnaMakeIt, _amount);
-        _amount = _amount / 1e18;
+        _amount = _amount / 1e9;
         uint256 exitAmount = (_amount - _amount * totalFees / 10000) * price;
         pairedToken.transfer(notGunnaMakeIt, exitAmount);
     }
 
     function upOnly() public override {
         require (block.timestamp > lastUpTime + upDelay);
-        uint256 supplyBuyoutCost = totalSupply * price / 1e18; // paired token needed to buy all supply
+        uint256 supplyBuyoutCost = totalSupply * price / 1e9; // paired token needed to buy all supply
         supplyBuyoutCost += (supplyBuyoutCost * upPercent / 10000); // with added fee
 
         if (pairedToken.balanceOf(address(this)) > supplyBuyoutCost) {
             price += price * upPercent / 10000; 
             lastUpTime = block.timestamp;
-
-            if (flowerBloomed) {
-                uint256 wavePower = totalSupply * 69 / 420000;
-                waveOfLove(wavePower);
-                totalSupply += (wavePower * 8);
-            }
-
-            emit PriceChanged(price, totalSupply);
+            emit PriceChanged(price);
         }
     }
 
@@ -172,22 +164,31 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
 
     function payFees() public override {
         uint256 feesOwing = balanceOf(feeCollection);
-        uint256 equalShare = feesOwing / (ownerCount + 3); // ownerCount + strainParent + rootkitFeed + parentFlower
+        uint256 equalShare = feesOwing / (ownerCount + petalCount + 3); // ownerCount + petalCount + strainParent + rootkitFeed + parentFlower
 
-        _balanceOf[feeCollection] -= feesOwing;
-        if (flowerBloomed) {
-            equalShare = feesOwing / (ownerCount + 10); //ownerCount + 8 petals + rootkitFeed, parentFlower
-            waveOfLove(equalShare);
+        _balanceOf[feeCollection] -= (petalCount + 2);
+       
+        for (uint256 i = 1; i <= petalCount; i++) {
+            _balanceOf[theEightPetals[i]] += equalShare;
+            emit Transfer(feeCollection, theEightPetals[i], equalShare);
         }
-        else {
-            _balanceOf[strainParent] += equalShare;
-        }
-        _balanceOf[rootkitFeed] += equalShare;
+
+        _balanceOf[strainParent] += equalShare;
+        emit Transfer(feeCollection, strainParent, equalShare);
+
         _balanceOf[parentFlower] += equalShare;
+        emit Transfer(feeCollection, parentFlower, equalShare);
+
+        feesOwing = balanceOf(feeCollection) / 1e9;
+        uint256 exitAmount = (feesOwing - feesOwing * burnRate / 10000) * price;
+        
+        equalShare = exitAmount / (ownerCount + 1);
 
         for (uint256 i = 1; i <= ownerCount; i++) {
-             _balanceOf[owners[i]] += equalShare;
+            pairedToken.transfer(owners[i], equalShare);
         }
+
+        pairedToken.transfer(rootkitFeed, equalShare);
     }
     
     //dev functions
@@ -195,19 +196,6 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         require (msg.sender == owners[1] || msg.sender == owners[2] || msg.sender == owners[3]);
         require (address(token) != address(this) && address(token) != address(pairedToken));
         token.transfer(msg.sender, token.balanceOf(address(this)));
-    }
-
-    // internal functions
-    function waveOfLove(uint256 givingWithLove) internal {
-        _balanceOf[theEightPetals[1]] += givingWithLove;
-        _balanceOf[theEightPetals[4]] += givingWithLove;
-        _balanceOf[theEightPetals[7]] += givingWithLove;
-        _balanceOf[theEightPetals[2]] += givingWithLove;
-        _balanceOf[theEightPetals[5]] += givingWithLove;
-        _balanceOf[theEightPetals[8]] += givingWithLove;
-        _balanceOf[theEightPetals[3]] += givingWithLove;
-        _balanceOf[theEightPetals[6]] += givingWithLove;
-        emit WaveOfLove();
     }
 
     //ERC20
