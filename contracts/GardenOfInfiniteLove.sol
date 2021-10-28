@@ -74,21 +74,21 @@ contract GardenOfInfiniteLove is IGarden {
     function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal returns (address) {
         uint256 nonce = ++flowersOfPair[pairedToken];
         burnRate = burnRate + random(nonce, 369) - 123;
-        if (burnRate < 420) {
-            burnRate = 420;
+        if (burnRate < 1420) {
+            burnRate = 1420;
         }
         upPercent = upPercent + random(nonce, 7) * 100 - 300;
-        if (upPercent < 300) {
-            upPercent = 300;
+        if (upPercent < 420) {
+            upPercent = 420;
         }
 
         if (burnRate < (upPercent + upPercent/2)) {
             burnRate = upPercent + upPercent/2;
         }
 
-        upDelay = upDelay + random(nonce, 369) - 180;
-        if (upDelay < 210) {
-            upDelay = 210;
+        upDelay = upDelay + random(nonce, 1369) - 1180;
+        if (upDelay < 1690) {
+            upDelay = 1690;
         }
 
         return plantNewFlower(pairedToken, parentToken, strainParent, burnRate, upPercent, upDelay, nonce);

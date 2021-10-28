@@ -108,7 +108,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
             rootkitFeed = _rootkitFeed;
             pairedToken = _pairedToken;
             burnRate = _burnRate;
-            totalFees = _burnRate + 111;
+            totalFees = _burnRate + 222;
             upPercent = _upPercent;
             upDelay = _upDelay;
             nonce = _nonce;
