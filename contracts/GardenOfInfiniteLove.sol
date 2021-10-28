@@ -23,6 +23,8 @@ contract GardenOfInfiniteLove is IGarden {
     mapping (address => address[]) public pairedFlowers;
     mapping (address => uint256) public flowersOfPair;
 
+    bool public override restrictedMode;
+
     struct FlowerData {
         address pairedAddress;
         address parentToken;
@@ -40,12 +42,19 @@ contract GardenOfInfiniteLove is IGarden {
         rootkit = _rootkit;
         rootkitFeed = _rootkitFeed;
         costToPlantNewSeed = _costToPlantNewSeed;
+        restrictedMode = true;
     }
 
     event FlowerPlanted(address flower, address pairedToken);
 
+    function removeRestrictedMode() public {
+        require (msg.sender == dev3);
+        restrictedMode = false;
+    }
+
     function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
         if (msg.sender != dev3){
+            require (!restrictedMode);
             rootkit.transferFrom(msg.sender, address(this), costToPlantNewSeed); // it costs 0.69 ROOT to seed a new flower type
         }
         if (flowersOfPair[pairedToken] > 0) { return; }

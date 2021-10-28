@@ -147,6 +147,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     }
 
     function letTheFlowersCoverTheEarth() public override {
+        require (garden.restrictedMode() == false);
         require (!flowerBloomed, "Flower Bloomed");
         address newPetal = garden.spreadTheLove();
         petalCount++;

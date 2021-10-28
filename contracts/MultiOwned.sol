@@ -67,7 +67,7 @@ abstract contract MultiOwned is IMultiOwned {
         if (!dictator) {
             require (owners[indexSpot] == address(0));
             ownerCount++;
-            require (ownerCount < 23);
+            require (ownerCount <= 23);
             owners[indexSpot] = newOwner;
             ownerIndex[newOwner] = indexSpot;
             emit OwnershipTransferred(address(0), newOwner);
