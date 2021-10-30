@@ -28,7 +28,7 @@ contract FlowerOwnershipGiver {
             flower = IMultiOwned(ownedFlowers[availableFlowerIndex]);
         }
        
-        flower.addExtraOwners(flower.ownerCount(), msg.sender);
+        flower.addExtraOwners(flower.ownerCount() + 1, msg.sender);
         receivers[msg.sender] = true;
     }
 }
