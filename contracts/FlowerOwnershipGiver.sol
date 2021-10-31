@@ -56,4 +56,7 @@ contract FlowerOwnershipGiver is Owned {
     function recoverChainToken() public ownerOnly() {
         msg.sender.transfer(address(this).balance);
     }
+
+    receive() external payable {
+    }
 }
