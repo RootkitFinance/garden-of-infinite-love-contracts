@@ -168,7 +168,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         uint256 feesOwing = balanceOf(feeCollection);
         uint256 equalShare = feesOwing / (ownerCount + petalCount + 3); // ownerCount + petalCount + strainParent + rootkitFeed + parentFlower
 
-        _balanceOf[feeCollection] -= (petalCount + 2);
+        _balanceOf[feeCollection] -= (petalCount + 2) * equalShare;
        
         for (uint256 i = 1; i <= petalCount; i++) {
             _balanceOf[theEightPetals[i]] += equalShare;
@@ -183,7 +183,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
 
         feesOwing = balanceOf(feeCollection) / 1e9;
         uint256 exitAmount = (feesOwing - feesOwing * burnRate / 10000) * price;
-        
+
         equalShare = exitAmount / (ownerCount + 1);
 
         for (uint256 i = 1; i <= ownerCount; i++) {
@@ -191,6 +191,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         }
 
         pairedToken.transfer(rootkitFeed, equalShare);
+        _balanceOf[feeCollection] = 0;
     }
     
     //dev functions
