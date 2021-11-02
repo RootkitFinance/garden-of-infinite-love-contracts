@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: U-U-U-UPPPPP!!!
 pragma solidity ^0.7.6;
-pragma abicoder v2;
 
 import "./IERC20.sol";
 import "./IGarden.sol";
@@ -12,7 +11,7 @@ contract GardenOfInfiniteLove is IGarden {
     address private immutable dev3;
     address private immutable dev6;
     address private immutable dev9;
-    address private immutable rootkitFeed;
+    address public feeSplitter;
     uint256 public costToPlantNewSeed; 
     // 6969e18 - 6969 upBNB 
     // 696969e12 - 0.69 ROOT
@@ -34,22 +33,25 @@ contract GardenOfInfiniteLove is IGarden {
         uint256 upDelay;
         uint256 nonce;
     }
+    event FlowerPlanted(address flower, address pairedToken);
 
-    constructor(address _dev6, address _dev9, IERC20 _rootkit, address _rootkitFeed, uint256 _costToPlantNewSeed) {
+    constructor(address _dev6, address _dev9, IERC20 _rootkit, uint256 _costToPlantNewSeed) {
         dev3 = msg.sender;
         dev6 = _dev6;
         dev9 = _dev9;
         rootkit = _rootkit;
-        rootkitFeed = _rootkitFeed;
         costToPlantNewSeed = _costToPlantNewSeed;
         restrictedMode = true;
     }
 
-    event FlowerPlanted(address flower, address pairedToken);
-
     function removeRestrictedMode() public {
         require (msg.sender == dev3);
         restrictedMode = false;
+    }
+
+    function setFeeSplitter(address _feeSplitter) public {
+        require (msg.sender == dev3);
+        feeSplitter = _feeSplitter;
     }
 
     function plantNewSeed(address pairedToken) public { // seed a fresh parent flower
@@ -96,7 +98,7 @@ contract GardenOfInfiniteLove is IGarden {
         
     function plantNewFlower(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal returns (address) {        
         Octalily newFlower = new Octalily();
-        newFlower.init(IERC20(pairedToken), burnRate, upPercent, upDelay, parentToken, strainParent, nonce, rootkitFeed);
+        newFlower.init(IERC20(pairedToken), burnRate, upPercent, upDelay, parentToken, strainParent, nonce, feeSplitter);
         newFlower.setInitialOwners(address(tx.origin), dev6, dev9);
         address flower = address(newFlower);
         flowers[flower] = FlowerData({

@@ -6,7 +6,6 @@ import "./IERC20.sol";
 interface IOctalily is IERC20
 {
     function letTheFlowersCoverTheEarth() external;
-    function payFees() external;
     function upOnly() external;
     function buy(uint256 _amount) external;
     function sell(uint256 _amount) external;

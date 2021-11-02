@@ -73,10 +73,8 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     uint256 public price;
     uint256 public lastUpTime;
 
-    address constant feeCollection = 0x6969696969696969696969696969696969696969;
-
     //fee collectors
-    address public rootkitFeed;
+    address public feeSplitter;
     address public parentFlower;
     address public strainParent;
 
@@ -103,9 +101,9 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     function init (
         IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, 
         uint256 _upDelay, address _parentFlower, address _strainParent, 
-        uint256 _nonce, address _rootkitFeed) public {       
+        uint256 _nonce, address _feeSplitter) public {       
             require(msg.sender == address(garden)); 
-            rootkitFeed = _rootkitFeed;
+            feeSplitter = _feeSplitter;
             pairedToken = _pairedToken;
             burnRate = _burnRate;
             totalFees = _burnRate + 123;
@@ -163,36 +161,6 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         uint256 amount = lily.balanceOf(address(this));
         lily.sell(amount);
     }
-
-    function payFees() public override {
-        uint256 feesOwing = balanceOf(feeCollection);
-        uint256 equalShare = feesOwing / (ownerCount + petalCount + 3); // ownerCount + petalCount + strainParent + rootkitFeed + parentFlower
-
-        _balanceOf[feeCollection] -= (petalCount + 2) * equalShare;
-       
-        for (uint256 i = 1; i <= petalCount; i++) {
-            _balanceOf[theEightPetals[i]] += equalShare;
-            emit Transfer(feeCollection, theEightPetals[i], equalShare);
-        }
-
-        _balanceOf[strainParent] += equalShare;
-        emit Transfer(feeCollection, strainParent, equalShare);
-
-        _balanceOf[parentFlower] += equalShare;
-        emit Transfer(feeCollection, parentFlower, equalShare);
-
-        feesOwing = balanceOf(feeCollection) / 1e9;
-        uint256 exitAmount = (feesOwing - feesOwing * burnRate / 10000) * price;
-
-        equalShare = exitAmount / (ownerCount + 1);
-
-        for (uint256 i = 1; i <= ownerCount; i++) {
-            pairedToken.transfer(owners[i], equalShare);
-        }
-
-        pairedToken.transfer(rootkitFeed, equalShare);
-        _balanceOf[feeCollection] = 0;
-    }
     
     //dev functions
     function recoverTokens(IERC20 token) public {
@@ -206,7 +174,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
         uint256 remaining = amount - amount * totalFees / 10000;
         uint256 unburned = amount * 123 / 10000;
         _balanceOf[account] += remaining;
-        _balanceOf[feeCollection] += unburned;
+        _balanceOf[feeSplitter] += unburned;
         totalSupply += (remaining + unburned);
         emit Transfer(address(0), account, remaining + unburned);
     }
@@ -214,7 +182,7 @@ contract Octalily is IERC20, MultiOwned, IOctalily {
     function _burn(address notGunnaMakeIt, uint amount) internal {
         _balanceOf[notGunnaMakeIt] -= amount;
         uint256 unburned = amount * 123 / 10000;
-        _balanceOf[feeCollection] += unburned;
+        _balanceOf[feeSplitter] += unburned;
         totalSupply -= (amount - unburned);
         emit Transfer(notGunnaMakeIt, address(0), amount);
     }
