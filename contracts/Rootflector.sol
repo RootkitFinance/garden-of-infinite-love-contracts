@@ -61,7 +61,7 @@ contract Rootflector is ERC20, Owned {
     function pendingReward(address account) public view returns (uint256) {
         if (account == address(this)) { return 0; }
         
-        uint256 accountRewards = _balanceOf[address(this)].mul(_balanceOf[account]).mul(1e18).div(totalSupply).div(1e18);
+        uint256 accountRewards = (_balanceOf[address(this)] + totalPaid).mul(_balanceOf[account]).mul(1e18).div(totalSupply).div(1e18);
         uint256 alreadyPaid = paid[account];
         return accountRewards > alreadyPaid ? accountRewards - alreadyPaid : 0;
     }
