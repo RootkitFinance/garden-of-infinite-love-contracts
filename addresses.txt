@@ -1,0 +1,23 @@
+garden of infinite love 
+
+constructor
+
+dev 3 = msg sender
+dev6: 0x30d1db7f73C7f9819e0676F5052D3B2D45FF3Fe5
+dev9: 0xdF890E9287a0FEb70Eb059474F57B1100A919Fc3
+rootkit: 0xe6a11F125a834E0676F3f8f33eb347D4e1938264
+rootfeed: 0xc27c10ABf2fD6B39Cda4c5478BB2BF1E12919c99
+constToPlantNewSeed
+
+first launch addresses
+MATIC
+garden of infinite love: 0xdb32cc74150c6a54934f198b7db4a49b4fd20597
+
+upMatic Flower Giver: 0x6A76A2887C14EbCb8370ea44CF975eA649343d68
+wMatic Flower Giver: 0x7EfDf48aDcae7dC24695314E121cb6732329332D
+
+upMatic OctaLily _1: 0x0BE4fA46B9a1E484Ba3EDbf507E425C84B07Fa16
+upMatic OctaLily 11: 0x2AA5e9079204e28375Dc3b15E0beE9c1ab3FAaD9
+
+wMatic OctaLily _1: 0xaFb250Da16bD715b32653240937b17bC720d1e99
+wMatic OctaLily 11: 0x586703e5C11913fb7A2afc5B2b53BA1a8f1448E6
