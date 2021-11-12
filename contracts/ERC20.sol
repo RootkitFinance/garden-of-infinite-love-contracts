@@ -6,8 +6,8 @@ Simplified thanks to higher solidity version
 But same functionality
 */
 
-import "../IERC20.sol";
-import "../SafeMath.sol";
+import "./IERC20.sol";
+import "./SafeMath.sol";
 
 
 /**
