@@ -6,7 +6,7 @@ import "./IGarden.sol";
 import "./Octalily.sol";
 import "./SafeMath.sol";
 
-contract GardenOfInfiniteLove is IGarden {
+contract NewGardenOfInfiniteLove is IGarden {
     IERC20 public immutable rootkit;
     address private immutable dev3;
     address private immutable dev6;
