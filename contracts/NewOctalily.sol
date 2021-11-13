@@ -97,14 +97,14 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         garden = IGarden(msg.sender);
     }
 
-    function init (IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, uint256 _upDelay, uint256 _rootflectionFee, address _strainParent, uint256 _nonce, address _feeSplitter) public {       
+    function init (IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, uint256 _upDelay, uint256 _rootflectionFeeRate, address _strainParent, uint256 _nonce, address _feeSplitter) public {       
         require(msg.sender == address(garden)); 
         feeSplitter = _feeSplitter;
         pairedToken = _pairedToken;
         burnRate = _burnRate;
         upPercent = _upPercent;
         upDelay = _upDelay;
-        rootflectionFee = _rootflectionFee;
+        rootflectionFee = _rootflectionFeeRate;
         nonce = _nonce;
         price = 696969;
         strainParent = _strainParent == address(0) ? address(this) : _strainParent;           
@@ -156,7 +156,6 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         emit Transfer(feeCollection, petals[1], petalShare);
         
         if (petalCount == 6) {
-
             _balanceOf[petals[2]] += petalShare;
             _balanceOf[petals[3]] += petalShare;
             _balanceOf[petals[4]] += petalShare;
@@ -171,7 +170,6 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
             _balanceOf[feeSplitter] += petalShare * 12;
             emit Transfer(feeCollection, feeSplitter, petalShare * 12);
         }
-
         else {
             _balanceOf[feeSplitter] += petalShare * 17;
             emit Transfer(feeCollection, feeSplitter, petalShare * 17);
@@ -195,7 +193,6 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         uint256 burn = amount * burnRate / 10000;
         uint256 reflection = amount * rootflectionFee / 10000;
         _balanceOf[account] -= (fees + burn + reflection);
-
 
         _balanceOf[feeCollection] += fees;
         _balanceOf[address(this)] += reflection;
@@ -240,10 +237,9 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
     //Rootflection
 
-    uint256 public rootflectionFee;
+    uint256 public rootflectionFeeRate;
     uint256 public totalPaid;
     mapping (address => uint256) public paid;
-
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         require(sender != address(0), "ERC20: transfer from the zero address");
@@ -251,40 +247,27 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
         uint256 remaining = amount;
 
-        uint256 reflection = amount * rootflectionFee / 10000;
-        uint256 rootflection = pendingReward(sender);
+        uint256 rootflectionFee = amount * rootflectionFeeRate / 10000;
+        uint256 rootflectionRewards = pendingReward(sender);
 
         uint256 burn = amount * burnRate / 10000;
         uint256 fee = amount * 123 / 10000;
 
-        remaining = amount.sub(reflection + burn + fee);
+        remaining = amount.sub(rootflectionFee + burn + fee);
 
         _balanceOf[sender] = _balanceOf[sender].add(rootflection).sub(amount, "ERC20: transfer amount exceeds balance");
-        _balanceOf[address(this)] = _balanceOf[address(this)].sub(rootflection) + reflection;
+        _balanceOf[address(this)] = _balanceOf[address(this)].sub(rootflection) + rootflectionFee;
         _balanceOf[recipient] += remaining;
-        paid[sender] += rootflection;
-        totalPaid += rootflection;
+        paid[sender] += rootflectionRewards;
+        totalPaid += rootflectionRewards;
 
         totalSupply -= burn;
         _balanceOf[feeCollection] += fee;
 
-        emit Transfer(sender, address(this), reflection);
-        emit Transfer(address(this), sender, rootflection);
+        emit Transfer(sender, address(this), rootflectionFee);
+        emit Transfer(address(this), sender, rootflectionRewards);
         emit Transfer(sender, address(0), burn);
-        emit Transfer(sender, address(0), fee);
-        emit Transfer(sender, recipient, remaining);
-    }
-
-        function _transfer(address sender, address recipient, uint256 amount) internal {
-        uint256 remaining = amount;
-        uint256 burn = amount * burnRate / 10000;
-        remaining = amount.sub(burn, "Octalily: burn too much");      
-
-        _balanceOf[sender] = _balanceOf[sender].sub(amount, "Octalily: transfer amount exceeds balance");    
-        _balanceOf[recipient] = _balanceOf[recipient].add(remaining);
-        totalSupply = totalSupply.sub(burn);  
-
-        emit Transfer(sender, address(0), burn);
+        emit Transfer(sender, feeCollection, fee);
         emit Transfer(sender, recipient, remaining);
     }
 
