@@ -90,7 +90,6 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
     // petal connections
     mapping (uint256 => address) public petals;
     uint8 public petalCount;
-    bool public flowerBloomed;
     event PriceChanged(uint256 newPrice);
     event AnotherOctalilyBeginsToGrow(address Octalily);
 
@@ -98,13 +97,14 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         garden = IGarden(msg.sender);
     }
 
-    function init (IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, uint256 _upDelay, address _strainParent, uint256 _nonce, address _feeSplitter) public {       
+    function init (IERC20 _pairedToken, uint256 _burnRate, uint256 _upPercent, uint256 _upDelay, uint256 _rootflectionFee, address _strainParent, uint256 _nonce, address _feeSplitter) public {       
         require(msg.sender == address(garden)); 
         feeSplitter = _feeSplitter;
         pairedToken = _pairedToken;
         burnRate = _burnRate;
         upPercent = _upPercent;
         upDelay = _upDelay;
+        rootflectionFee = _rootflectionFee;
         nonce = _nonce;
         price = 696969;
         strainParent = _strainParent == address(0) ? address(this) : _strainParent;           
@@ -114,7 +114,7 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
     function buy(uint256 _amount) public override {
         address superSmartInvestor = msg.sender;
         pairedToken.transferFrom(superSmartInvestor, address(this), _amount);
-        uint256 purchaseAmount = _amount * 1e9 / price;
+        uint256 purchaseAmount = _amount / price;
         _mint(superSmartInvestor, purchaseAmount);
     }
 
@@ -122,14 +122,13 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         address notGunnaMakeIt = msg.sender;
         require (balanceOf(notGunnaMakeIt) >= _amount);
         _burn(notGunnaMakeIt, _amount);
-        _amount = _amount / 1e9;
         uint256 exitAmount = (_amount - _amount * totalFees / 10000) * price;
         pairedToken.transfer(notGunnaMakeIt, exitAmount);
     }
 
     function upOnly() public override {
         require (block.timestamp > lastUpTime + upDelay);
-        uint256 supplyBuyoutCost = totalSupply * price / 1e9; // paired token needed to buy all supply
+        uint256 supplyBuyoutCost = totalSupply * price; // paired token needed to buy all supply
         supplyBuyoutCost += (supplyBuyoutCost * upPercent / 10000); // with added fee
 
         if (pairedToken.balanceOf(address(this)) > supplyBuyoutCost) {
@@ -139,39 +138,45 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         }
     }
 
-    function letTheFlowersCoverTheEarth() public override {
-        require (!garden.restrictedMode() || msg.sender == owners[1] || msg.sender == owners[2] || msg.sender == owners[3]);
-        require (!flowerBloomed, "Flower Bloomed");
-        address newPetal = garden.spreadTheLove();
+    function connectFlower(address newConnection) public override {
+        require (msg.sender == garden);
+        require (petalCount < 6);
         petalCount++;
-        petals[petalCount] = newPetal;
-        emit AnotherOctalilyBeginsToGrow(newPetal);
-        if (petalCount == 8) {
-            flowerBloomed = true;
-        }
+        petals[petalCount] = newConnection;
     }
 
     function sellOffspringToken (IOctalily lily) public override { // use to sell fees collected from other flowers
-        require(address(lily) != address(this));
         uint256 amount = lily.balanceOf(address(this));
         lily.sell(amount);
     }
 
      function payFees() public override {
-        uint256 feesOwing = balanceOf(feeCollection);
-        uint256 equalShare = feesOwing / (ownerCount + petalCount + 2); // ownerCount + petalCount + strainParent + rootkitFeed
-        _balanceOf[feeCollection] -= (petalCount + 1) * equalShare;
-       
-        for (uint256 i = 1; i <= petalCount; i++) {
-            _balanceOf[petals[i]] += equalShare;
-            emit Transfer(feeCollection, petals[i], equalShare);
+        uint256 petalShare = balanceOf(feeCollection) / 18;
+        _balanceOf[petals[1]] += petalShare;
+        emit Transfer(feeCollection, petals[1], petalShare);
+        
+        if (petalCount == 6) {
+
+            _balanceOf[petals[2]] += petalShare;
+            _balanceOf[petals[3]] += petalShare;
+            _balanceOf[petals[4]] += petalShare;
+            _balanceOf[petals[5]] += petalShare;
+            _balanceOf[petals[6]] += petalShare;
+            emit Transfer(feeCollection, petals[2], petalShare);
+            emit Transfer(feeCollection, petals[3], petalShare);
+            emit Transfer(feeCollection, petals[4], petalShare);
+            emit Transfer(feeCollection, petals[5], petalShare);
+            emit Transfer(feeCollection, petals[6], petalShare);
+
+            _balanceOf[feeSplitter] += petalShare * 12;
+            emit Transfer(feeCollection, feeSplitter, petalShare * 12);
         }
 
-        _balanceOf[strainParent] += equalShare;
-        emit Transfer(feeCollection, strainParent, equalShare);
-      
-        _balanceOf[feeSplitter] += (ownerCount + 1) * equalShare;
-        emit Transfer(feeCollection, feeSplitter, equalShare);       
+        else {
+            _balanceOf[feeSplitter] += petalShare * 17;
+            emit Transfer(feeCollection, feeSplitter, petalShare * 17);
+        }
+        _balanceOf[feeCollection] = 0;
     }
     
     //dev functions
@@ -183,11 +188,18 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
     //ERC20
     function _mint(address account, uint256 amount) internal {
-        uint256 remaining = amount - amount * totalFees / 10000;
-        uint256 unburned = amount * 123 / 10000;
-        _balanceOf[account] += remaining;
-        _balanceOf[feeCollection] += unburned;
-        totalSupply += (remaining + unburned);
+        _balanceOf[account] += amount;
+        emit Transfer(address(0), account, amount);
+
+        uint256 fees = amount * 123 / 10000;
+        uint256 burn = amount * burnRate / 10000;
+        uint256 reflection = amount * rootflectionFee / 10000;
+        _balanceOf[account] -= (fees + burn + reflection);
+
+
+        _balanceOf[feeCollection] += fees;
+        _balanceOf[address(this)] += reflection;
+        totalSupply += (amount - burn);
         emit Transfer(address(0), account, remaining + unburned);
     }
 
@@ -198,21 +210,6 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         totalSupply -= (amount - unburned);
         emit Transfer(notGunnaMakeIt, address(0), amount);
     }
-
-    function _transfer(address sender, address recipient, uint256 amount) internal {
-        uint256 remaining = amount;
-        uint256 burn = amount * burnRate / 10000;
-        remaining = amount.sub(burn, "Octalily: burn too much");      
-
-        _balanceOf[sender] = _balanceOf[sender].sub(amount, "Octalily: transfer amount exceeds balance");    
-        _balanceOf[recipient] = _balanceOf[recipient].add(remaining);
-        totalSupply = totalSupply.sub(burn);  
-        
-        emit Transfer(sender, address(0), burn);
-        emit Transfer(sender, recipient, remaining);
-    }
-
-    function balanceOf(address a) public virtual override view returns (uint256) { return _balanceOf[a]; }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(msg.sender, recipient, amount);
@@ -239,5 +236,67 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
         allowance[owner][spender] = amount;
         emit Approval(owner, spender, amount);
+    }
+
+    //Rootflection
+
+    uint256 public rootflectionFee;
+    uint256 public totalPaid;
+    mapping (address => uint256) public paid;
+
+
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
+
+        uint256 remaining = amount;
+
+        uint256 reflection = amount * rootflectionFee / 10000;
+        uint256 rootflection = pendingReward(sender);
+
+        uint256 burn = amount * burnRate / 10000;
+        uint256 fee = amount * 123 / 10000;
+
+        remaining = amount.sub(reflection + burn + fee);
+
+        _balanceOf[sender] = _balanceOf[sender].add(rootflection).sub(amount, "ERC20: transfer amount exceeds balance");
+        _balanceOf[address(this)] = _balanceOf[address(this)].sub(rootflection) + reflection;
+        _balanceOf[recipient] += remaining;
+        paid[sender] += rootflection;
+        totalPaid += rootflection;
+
+        totalSupply -= burn;
+        _balanceOf[feeCollection] += fee;
+
+        emit Transfer(sender, address(this), reflection);
+        emit Transfer(address(this), sender, rootflection);
+        emit Transfer(sender, address(0), burn);
+        emit Transfer(sender, address(0), fee);
+        emit Transfer(sender, recipient, remaining);
+    }
+
+        function _transfer(address sender, address recipient, uint256 amount) internal {
+        uint256 remaining = amount;
+        uint256 burn = amount * burnRate / 10000;
+        remaining = amount.sub(burn, "Octalily: burn too much");      
+
+        _balanceOf[sender] = _balanceOf[sender].sub(amount, "Octalily: transfer amount exceeds balance");    
+        _balanceOf[recipient] = _balanceOf[recipient].add(remaining);
+        totalSupply = totalSupply.sub(burn);  
+
+        emit Transfer(sender, address(0), burn);
+        emit Transfer(sender, recipient, remaining);
+    }
+
+    function balanceOf(address account) public override view returns (uint256) {
+        return _balanceOf[account] + pendingReward(account);
+    }
+
+    function pendingReward(address account) public view returns (uint256) {
+        if (account == address(this)) { return 0; }
+        
+        uint256 accountRewards = (_balanceOf[address(this)] + totalPaid).mul(_balanceOf[account]).mul(1e18).div(totalSupply).div(1e18);
+        uint256 alreadyPaid = paid[account];
+        return accountRewards > alreadyPaid ? accountRewards - alreadyPaid : 0;
     }
 }
