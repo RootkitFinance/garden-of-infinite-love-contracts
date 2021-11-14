@@ -58,7 +58,7 @@ Octalilly Token - a token that encourages forks of itself that link to become st
 // So I got all these magic beans that go straight up in value and never stop, wanna pass them out with me?
 
 
-contract NewOctalily is IERC20, MultiOwned, IOctalily {
+contract Octalily is IERC20, MultiOwned, IOctalily {
     using SafeMath for uint256;
 
     mapping (address => uint256) internal _balanceOf;
@@ -86,6 +86,7 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
     uint256 public upPercent;
     uint256 public upDelay;
     uint256 public nonce;
+    uint256 public totalFees;
 
     // petal connections
     mapping (uint256 => address) public petals;
@@ -104,11 +105,12 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
         burnRate = _burnRate;
         upPercent = _upPercent;
         upDelay = _upDelay;
-        rootflectionFee = _rootflectionFeeRate;
+        rootflectionFeeRate = _rootflectionFeeRate;
         nonce = _nonce;
         price = 696969;
         strainParent = _strainParent == address(0) ? address(this) : _strainParent;           
         lastUpTime = block.timestamp;
+        totalFees = rootflectionFeeRate + burnRate;
     }
 
     function buy(uint256 _amount) public override {
@@ -139,7 +141,7 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
     }
 
     function connectFlower(address newConnection) public override {
-        require (msg.sender == garden);
+        require (msg.sender == address(garden));
         require (petalCount < 6);
         petalCount++;
         petals[petalCount] = newConnection;
@@ -186,18 +188,16 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
     //ERC20
     function _mint(address account, uint256 amount) internal {
-        _balanceOf[account] += amount;
-        emit Transfer(address(0), account, amount);
-
         uint256 fees = amount * 123 / 10000;
         uint256 burn = amount * burnRate / 10000;
-        uint256 reflection = amount * rootflectionFee / 10000;
-        _balanceOf[account] -= (fees + burn + reflection);
+        uint256 reflection = amount * rootflectionFeeRate / 10000;
+        uint256 remaining = amount.sub(fees + burn + reflection);
+        _balanceOf[account] += remaining;
 
         _balanceOf[feeCollection] += fees;
         _balanceOf[address(this)] += reflection;
         totalSupply += (amount - burn);
-        emit Transfer(address(0), account, remaining + unburned);
+        emit Transfer(address(0), account, remaining);
     }
 
     function _burn(address notGunnaMakeIt, uint amount) internal {
@@ -241,7 +241,7 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
     uint256 public totalPaid;
     mapping (address => uint256) public paid;
 
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -255,8 +255,8 @@ contract NewOctalily is IERC20, MultiOwned, IOctalily {
 
         remaining = amount.sub(rootflectionFee + burn + fee);
 
-        _balanceOf[sender] = _balanceOf[sender].add(rootflection).sub(amount, "ERC20: transfer amount exceeds balance");
-        _balanceOf[address(this)] = _balanceOf[address(this)].sub(rootflection) + rootflectionFee;
+        _balanceOf[sender] = _balanceOf[sender].add(rootflectionRewards).sub(amount, "ERC20: transfer amount exceeds balance");
+        _balanceOf[address(this)] = _balanceOf[address(this)].sub(rootflectionRewards) + rootflectionFee;
         _balanceOf[recipient] += remaining;
         paid[sender] += rootflectionRewards;
         totalPaid += rootflectionRewards;
