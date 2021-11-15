@@ -51,7 +51,7 @@ contract GardenOfInfiniteLove is IGarden {
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
-        Octalily newFlower = plantNewFlower(pairedToken, dev3, 1420, 420, 1690, 369, nonce); 
+        Octalily newFlower = plantNewFlower(pairedToken, dev3, 1420, 420, 4269, 369, nonce); 
         newFlower.connectFlower(dev3);
     }
 
@@ -65,9 +65,9 @@ contract GardenOfInfiniteLove is IGarden {
         address strainParent = pairedFlowers[pairedToken][0];
 
         uint256 nonce = ++flowersOfPair[pairedToken];
-        (uint256 burnRate, uint256 upPercent, uint256 upDelay) = randomizeFlowerStats(parent.burnRate(), parent.upPercent(), parent.upDelay(), nonce);
+        (uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 reflection) = randomizeFlowerStats(parent.burnRate(), parent.upPercent(), parent.upDelay(), parent.rootflectionFeeRate(), nonce);
        
-        Octalily newFlower = plantNewFlower(pairedToken, strainParent, burnRate, upPercent, upDelay, 369, nonce);
+        Octalily newFlower = plantNewFlower(pairedToken, strainParent, burnRate, upPercent, upDelay, reflection, nonce);
         newFlower.connectFlower(strainParent);
     }
 
@@ -77,17 +77,28 @@ contract GardenOfInfiniteLove is IGarden {
         emit FlowersConnected(address(flower), newConnection);
     }
 
-    function randomizeFlowerStats(uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 reflection, uint256 nonce) internal view returns (uint256, uint256, uint256) {
+    function randomizeFlowerStats(uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 reflection, uint256 nonce) internal view returns (uint256, uint256, uint256, uint256) {
         burnRate = burnRate + random(nonce, 369) - 123;
+
+        if (burnRate < 1420) {
+            burnRate = 1420;
+        }
 
         upPercent = upPercent + random(nonce, 7) * 100 - 300;
 
         upDelay = upDelay + random(nonce, 1369) - 693;
 
-        upDelay = upDelay + random(nonce, 369) - 123;
+        reflection = reflection + random(nonce, 369) - 123;
 
+        if (burnRate < upPercent*2) {
+            burnRate = upPercent*2;
+        }
 
-        return (burnRate, upPercent, upDelay);
+        if (reflection > burnRate/3) {
+            reflection = burnRate/3;
+        }
+
+        return (burnRate, upPercent, upDelay, reflection);
     }
         
     function plantNewFlower(address pairedToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 rootflectionFeeRate, uint256 nonce) internal returns (Octalily) {        
