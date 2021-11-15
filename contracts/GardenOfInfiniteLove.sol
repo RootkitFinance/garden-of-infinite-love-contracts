@@ -77,24 +77,15 @@ contract GardenOfInfiniteLove is IGarden {
         emit FlowersConnected(address(flower), newConnection);
     }
 
-    function randomizeFlowerStats(uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal view returns (uint256, uint256, uint256) {
+    function randomizeFlowerStats(uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 reflection, uint256 nonce) internal view returns (uint256, uint256, uint256) {
         burnRate = burnRate + random(nonce, 369) - 123;
-        if (burnRate < 1420) {
-            burnRate = 1420;
-        }
-        upPercent = upPercent + random(nonce, 7) * 100 - 300;
-        if (upPercent < 420) {
-            upPercent = 420;
-        }
 
-        if (burnRate < (upPercent + upPercent/2)) {
-            burnRate = upPercent + upPercent/2;
-        }
+        upPercent = upPercent + random(nonce, 7) * 100 - 300;
 
         upDelay = upDelay + random(nonce, 1369) - 693;
-        if (upDelay < 1690) {
-            upDelay = 1690;
-        }
+
+        upDelay = upDelay + random(nonce, 369) - 123;
+
 
         return (burnRate, upPercent, upDelay);
     }
