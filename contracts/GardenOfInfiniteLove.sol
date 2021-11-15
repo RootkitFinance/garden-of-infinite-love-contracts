@@ -17,23 +17,13 @@ contract GardenOfInfiniteLove is IGarden {
     // 696969e12 - 0.69 ROOT
     // 696969e15 -  696 upTether
 
-    mapping (address => FlowerData) public flowers;
-    mapping (address => bool) bloomingFlowers;
-    mapping (address => address[]) public pairedFlowers;
+    mapping (address => address[]) public pairedFlowers; // paired -> array of flowers
     mapping (address => uint256) public flowersOfPair;
 
     bool public override restrictedMode;
 
-    struct FlowerData {
-        address pairedAddress;
-        address parentToken;
-        address strainParent;
-        uint256 burnRate;
-        uint256 upPercent;
-        uint256 upDelay;
-        uint256 nonce;
-    }
     event FlowerPlanted(address flower, address pairedToken);
+    event FlowersConnected(address flower, address newConnection);
 
     constructor(address _dev6, address _dev9, IERC20 _rootkit, uint256 _costToPlantNewSeed) {
         dev3 = msg.sender;
@@ -61,20 +51,33 @@ contract GardenOfInfiniteLove is IGarden {
         }
         if (flowersOfPair[pairedToken] > 0) { return; }
         uint256 nonce = ++flowersOfPair[pairedToken];
-        plantNewFlower(pairedToken, dev3, address(0), 1420, 420, 1690, nonce); 
+        Octalily newFlower = plantNewFlower(pairedToken, dev3, 1420, 420, 1690, 369, nonce); 
+        newFlower.connectFlower(dev3);
     }
 
-    function spreadTheLove() public override returns (address) { // Any flower can spawn another flower for free
-        address spreader = msg.sender;
-        require (bloomingFlowers[spreader]);
-        FlowerData memory parentFlowerData = flowers[spreader];
-        return randomizeFlowerStats(
-            parentFlowerData.pairedAddress, spreader, parentFlowerData.strainParent, 
-            parentFlowerData.burnRate, parentFlowerData.upPercent, parentFlowerData.upDelay);
-    }
+    function spreadTheLove(address pairedToken) public override { // Adds a petal/connection
+        require (!restrictedMode || msg.sender == dev3);
 
-    function randomizeFlowerStats(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay) internal returns (address) {
+        uint256 length = pairedFlowers[pairedToken].length;
+        require (length > 0);
+
+        Octalily parent = length > 4 ? Octalily(pairedFlowers[pairedToken][length - 3]) : Octalily(pairedFlowers[pairedToken][0]);
+        address strainParent = pairedFlowers[pairedToken][0];
+
         uint256 nonce = ++flowersOfPair[pairedToken];
+        (uint256 burnRate, uint256 upPercent, uint256 upDelay) = randomizeFlowerStats(parent.burnRate(), parent.upPercent(), parent.upDelay(), nonce);
+       
+        Octalily newFlower = plantNewFlower(pairedToken, strainParent, burnRate, upPercent, upDelay, 369, nonce);
+        newFlower.connectFlower(strainParent);
+    }
+
+    function connectFlowers(Octalily flower, address newConnection) public {
+        require (msg.sender == dev6 || msg.sender == dev9 || msg.sender == dev3);
+        flower.connectFlower(newConnection);
+        emit FlowersConnected(address(flower), newConnection);
+    }
+
+    function randomizeFlowerStats(uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal view returns (uint256, uint256, uint256) {
         burnRate = burnRate + random(nonce, 369) - 123;
         if (burnRate < 1420) {
             burnRate = 1420;
@@ -93,28 +96,20 @@ contract GardenOfInfiniteLove is IGarden {
             upDelay = 1690;
         }
 
-        return plantNewFlower(pairedToken, parentToken, strainParent, burnRate, upPercent, upDelay, nonce);
+        return (burnRate, upPercent, upDelay);
     }
         
-    function plantNewFlower(address pairedToken, address parentToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 nonce) internal returns (address) {        
+    function plantNewFlower(address pairedToken, address strainParent, uint256 burnRate, uint256 upPercent, uint256 upDelay, uint256 rootflectionFeeRate, uint256 nonce) internal returns (Octalily) {        
         Octalily newFlower = new Octalily();
-        newFlower.init(IERC20(pairedToken), burnRate, upPercent, upDelay, parentToken, strainParent, nonce, feeSplitter);
-        newFlower.setInitialOwners(address(tx.origin), dev6, dev9);
-        address flower = address(newFlower);
-        flowers[flower] = FlowerData({
-            pairedAddress: pairedToken,
-            parentToken : parentToken,
-            strainParent : newFlower.strainParent(),
-            burnRate: burnRate,
-            upPercent: upPercent,
-            upDelay: upDelay,
-            nonce: nonce
-        });
+        
+        newFlower.init(IERC20(pairedToken), burnRate, upPercent, upDelay, rootflectionFeeRate, strainParent, nonce, feeSplitter);
+        newFlower.addExtraOwners(dev6);
+        newFlower.addExtraOwners(dev9);
 
-        bloomingFlowers[flower] = true;
+        address flower = address(newFlower);        
         pairedFlowers[pairedToken].push(flower);
         emit FlowerPlanted(flower, pairedToken);
-        return flower;
+        return newFlower;
     }
 
     function random(uint256 nonce, uint256 max) private view returns (uint256) {
